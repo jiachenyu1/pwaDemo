@@ -27,7 +27,7 @@ where `[port]` is an optional HTTP port (8888 by default)
             '.jpeg': ['image/jpeg', 0],
             '.png': ['image/png', 0],
             '.gif': ['image/gif', 0],
-            '.ico': ['image/x-icon', 0],
+            '.ico': ['image/x-icon', 100000],
             '.svg': ['image/svg+xml', 0],
             '.txt': ['text/plain', 86400],
             'err': ['text/plain', 30]
@@ -42,7 +42,7 @@ where `[port]` is an optional HTTP port (8888 by default)
 
         // not found
         // index.html default
-        if (filename === "/") filename += '/index.html';
+        if (filename === "/" || filename === "/offline") filename += '/index.html';
         if (filename === "/serviceWorker.js") {
             filename = "/js/serviceWorker.js"
         }
