@@ -21,12 +21,11 @@
 </nav>
 <main>
     <img src="/image/banner.png" alt="" class="banner">
+    <button id="button">发送消息</button>
     <p>
         奥斯卡大数据点击爱是看得见阿萨德，按实际大厦将颠卡视角的骄傲的，按时打卡斯柯达速度快。打卡SD卡开始的，是可敬的萨就开始大量是看得见爱神的箭，阿斯达后进生达会计师等哈三等奖哈是多少。sad就卡机打碎了肯德基阿斯加德卡来说肯定。佳都科技阿斯利康大奖是考虑到骄傲卡三等奖，啊数据库的拉丝机带劲啊十九大蓝框是打卡时间肯德基</p>
     <img src="//c1.xinstatic.com/c/20181108/0848/5be387e75239e604853_18.jpg" alt="">
 </main>
-<p data-height="265" data-theme-id="0" data-slug-hash="Jwdjyj" data-default-tab="css,result" data-user="jiachenyu1" data-pen-title="zindexDemo" class="codepen">See the Pen <a href="https://codepen.io/jiachenyu1/pen/Jwdjyj/">zindexDemo</a> by jiachenyu1 (<a href="https://codepen.io/jiachenyu1">@jiachenyu1</a>) on <a href="https://codepen.io">CodePen</a>.</p>
-<script async src="https://static.codepen.io/assets/embed/ei.js"></script>
 </body>
 <script>
     if ('serviceWorker' in navigator) {
@@ -40,6 +39,20 @@
                 // 注册失败:(
                 console.log('ServiceWorker注册失败: ' + err);
             });
+        navigator.serviceWorker.addEventListener("message", data => {
+            if (data.data === "update") {
+                alert("update")
+            }
+            else if (data.data === "send") {
+                alert("hello")
+            }
+        })
+
+
+    }
+
+    document.getElementById("button").onclick = () => {
+        navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage("123")
     }
 </script>
 </html>
