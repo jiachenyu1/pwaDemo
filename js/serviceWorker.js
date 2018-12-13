@@ -1,6 +1,6 @@
 const offlineURL = '/offline';
 const staticFile = ["/", "/manifest.json", "/css/style.css", "/image/banner.png", "/image/logo/ic_launcher48.png", "/image/favicon.ico"].concat(offlineURL)
-const version = "v2.0";
+const version = "v2.1";
 const cache_host = [location.host, 'c.xinstatic.com'];
 
 self.addEventListener("install", function (e) {
@@ -53,8 +53,40 @@ self.addEventListener("message", e => {
 })
 
 self.addEventListener("fetch", e => {
+    if(e.request.method === "POST"){
+        return;
+    }
     e.respondWith(
         handleFetchRequest(e.request)
+    )
+})
+let url = "";
+
+self.addEventListener("push", e => {
+    console.log(JSON.parse(e.data.text()));
+    const res = JSON.parse(e.data.text());
+    url = res.url;
+    e.waitUntil(
+        self.registration.showNotification(res.title, {
+            body: res.msg,
+            url: res.url,
+            icon: res.icon,
+            data: res.url
+        })
+    )
+})
+
+self.addEventListener("notificationclick", e => {
+    console.log(e)
+    e.notification.close();
+    e.waitUntil(
+        clients.matchAll({
+            type: "window"
+        }).then(function () {
+            if (clients.openWindow) {
+                return clients.openWindow(e.notification.data);
+            }
+        })
     )
 })
 
@@ -96,13 +128,7 @@ const handleFetchRequest = function (req) {
                         })
                         .catch(function (err) {
                             console.log('Update cache ' + request.url + ' fail: ' + err.message);
-                            return new Response(
-                                '<svg role="img" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><title>offline</title><path d="M0 0h400v300H0z" fill="#eee" /><text x="200" y="150" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="50" fill="#ccc">offline</text></svg>',
-                                { headers: {
-                                        'Content-Type': 'image/svg+xml',
-                                        'Cache-Control': 'no-store'
-                                    }}
-                            );
+                            return caches.match(offlineURL);
                         });
                     // return response;
                 }
@@ -114,7 +140,6 @@ const handleFetchRequest = function (req) {
                         if (!isValidResponse(response)) {
                             return response;
                         }
-
                         const clonedResponse = response.clone();
 
                         caches
@@ -124,6 +149,10 @@ const handleFetchRequest = function (req) {
                             });
 
                         return response;
+                    }).catch((err) => {
+                        return caches.open(version).then(cache => {
+                            return cache.match(offlineURL)
+                        })
                     });
             });
     } else {

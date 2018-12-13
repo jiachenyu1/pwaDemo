@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/image/logo/ic_launcher144.png">
+    <link rel="apple-touch-icon-precomposed" sizes="96x96" href="/image/logo/ic_launcher96.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/image/logo/ic_launcher72.png">
+    <link rel="apple-touch-icon-precomposed" sizes="48x48" href="/image/logo/ic_launcher48.png">
+    <link rel="shortcut icon" href="/image/logo/ic_launcher48.png">
+    <link rel="shortcut icon" href="/image/favicon.ico">
+    <meta name="application-name" content="pwaDemo">
+    <style>
+        input {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+<label for="">标题:</label>
+<input type="text">
+<label for="">内容:</label>
+<input type="text">
+<label for="">跳转链接:</label>
+<input type="text">
+<button id="push">推送</button>
+</body>
+<script>
+    const btn = document.getElementById("push");
+    const textArr = document.getElementsByTagName("input");
+    let data = {};
+    btn.onclick = () => {
+        console.log(textArr[0].value)
+        data.title = textArr[0].value;
+        data.content = textArr[1].value;
+        data.url = textArr[2].value;
+        console.log(data)
+        fetch("/push", {
+            method: "post",
+            headers: new Headers({
+                "content-type": "application/json"
+            }),
+            body: JSON.stringify(data)
+        })
+    }
+
+    navigator.serviceWorker.ready.then(req => {
+        req.pushManager.getSubscription().then(sub => {
+            if(sub){
+                data.sub = sub;
+            }
+        })
+    })
+</script>
+</html>

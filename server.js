@@ -1,21 +1,12 @@
-#!/usr/bin/env node
-
-/*
-server.js: launches a static file web server from the current folder
-
-make executable with `chmod +x ./server.js`
-run with `./server.js [port]`
-where `[port]` is an optional HTTP port (8888 by default)
-*/
 (function () {
 
     'use strict';
-
     const
         http = require('http'),
         url = require('url'),
         path = require('path'),
         fs = require('fs'),
+        webPush = require("web-push"),
         port = parseInt(process.argv[2] || 8000, 10),
         mime = {
             '.html': ['text/html', 86400],
@@ -32,35 +23,80 @@ where `[port]` is an optional HTTP port (8888 by default)
             '.txt': ['text/plain', 86400],
             'err': ['text/plain', 30]
         };
-
+    const publicVapidKey = "BEMfDUy0BLKiUyXB4ivlNb5pkkAcVejNq8DsrQXBTlAOKgVGEsZj-ZUNLZHmXvwnLyiyEBnSFcwz-lAq8sP6mC0";
+    const privateVapidKey = "QsPaF7BsLSyBA8Ap4OM66FxEiXVL9Lf-7coQZKBv5Oc";
+    webPush.setVapidDetails('mailto:1539981050@qq.com', publicVapidKey, privateVapidKey);
 // new server
     http.createServer(function (req, res) {
-        console.log(req.url)
-        let filename = req.url
-
-        // file available?
-
-        // not found
-        // index.html default
-        if (filename === "/" || filename === "/offline") filename += '/index.html';
-        if (filename === "/serviceWorker.js") {
-            filename = "/js/serviceWorker.js"
-        }
-        filename = path.join(process.cwd(), filename);
-        console.log(filename)
-        // read file
-        fs.readFile(filename, (err, file) => {
-
-            if (err) {
-                // error reading
-                serve(500, err + '\n');
+        let body = "";
+        req.on("data", data => {
+            body += data;
+        })
+        req.on("end", () => {
+            let filename = req.url
+            if (req.method === "POST") {
+                if (filename === "/register") {
+                    console.log(JSON.parse(body))
+                    webPush.sendNotification(JSON.parse(body),
+                        JSON.stringify({
+                            msg: "这是一个push推送",
+                            url: "http://localhost:8000/offline",
+                            icon: "http://localhost:8000/image/logo/ic_launcher144.png",
+                            title: "hello world"
+                        })
+                    ).then(result => {
+                        console.log("1:", result)
+                        res.end(JSON.stringify({
+                            msg: "成功"
+                        }));
+                    }).catch(err => {
+                        console.log(err)
+                        // res.end(JSON.stringify({
+                        //     msg: "失败"
+                        // }));
+                    })
+                }
+                else if(filename === "/push"){
+                    const sub = JSON.parse(body)
+                    console.log(sub)
+                    webPush.sendNotification(sub.sub,
+                        JSON.stringify({
+                            msg: sub.content,
+                            url: sub.url,
+                            icon: "http://localhost:8000/image/logo/ic_launcher144.png",
+                            title: sub.title
+                        })
+                    ).then(result => {
+                        // console.log("1:", result)
+                        res.end(JSON.stringify({
+                            msg: "成功"
+                        }));
+                    })
+                }
             }
             else {
-                // return file
-                serve(200, file, path.extname(filename));
-            }
+                if (filename === "/" || filename === "/offline" || filename === "/push") {
+                    filename += '/index.html';
+                }
 
-        });
+                if (filename === "/serviceWorker.js") {
+                    filename = "/js/serviceWorker.js"
+                }
+                filename = path.join(process.cwd(), filename);
+                // read file
+                fs.readFile(filename, (err, file) => {
+                    console.log(filename)
+                    if (err) {
+                        // error reading
+                        serve(500, err + '\n');
+                    }
+                    else {
+                        // return file
+                        serve(200, file, path.extname(filename));
+                    }
+                });
+            }
+        })
 
         // serve content
         function serve(code, content, type) {
@@ -78,6 +114,7 @@ where `[port]` is an optional HTTP port (8888 by default)
         }
 
     }).listen(port);
+
 
     console.log('Server running at http://localhost:' + port);
 

@@ -6,8 +6,16 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/image/logo/ic_launcher144.png">
+    <link rel="apple-touch-icon-precomposed" sizes="96x96" href="/image/logo/ic_launcher96.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/image/logo/ic_launcher72.png">
+    <link rel="apple-touch-icon-precomposed" sizes="48x48" href="/image/logo/ic_launcher48.png">
     <link rel="shortcut icon" href="/image/logo/ic_launcher48.png">
     <link rel="shortcut icon" href="/image/favicon.ico">
+    <meta name="application-name" content="pwaDemo">
 </head>
 <body>
 <header>
@@ -15,7 +23,7 @@
 </header>
 <nav>
     <ul>
-        <li><a href="/list">列表</a></li>
+        <li><a href="/push">推送</a></li>
         <li><a href="/detail">详情</a></li>
     </ul>
 </nav>
@@ -28,11 +36,43 @@
 </main>
 </body>
 <script>
+    const publicKey = "BEMfDUy0BLKiUyXB4ivlNb5pkkAcVejNq8DsrQXBTlAOKgVGEsZj-ZUNLZHmXvwnLyiyEBnSFcwz-lAq8sP6mC0";
+    // const privateKey = "QsPaF7BsLSyBA8Ap4OM66FxEiXVL9Lf-7coQZKBv5Oc";
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/serviceWorker.js')
             .then(function (registration) {
                 // 注册成功
                 console.log('ServiceWorker注册成功，作用域: ' + registration.scope);
+                return registration.pushManager.getSubscription().then(res => {
+                    console.log(res)
+                    if (!res) {
+                         subscribe(registration);
+                    } else {
+                        console.log("remain endpoint:", res.endpoint);
+                    }
+                })
+
+                function subscribe(reg) {
+                    console.log(reg)
+                     reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(publicKey)
+                    }).then(function (pushSubscription) {
+                        console.log(pushSubscription)
+                        fetch("/register", {
+                            method: "post",
+                            headers: new Headers({
+                                "content-type": "application/json"
+                            }),
+                            body: JSON.stringify(pushSubscription)
+                        })
+                    }).catch((err)=>{
+                        console.log(err)
+                        if(Notification.permission === "denied"){
+                            console.log("refuse")
+                        }
+                    });
+                }
             })
             .catch(function (err) {
 
@@ -53,6 +93,19 @@
 
     document.getElementById("button").onclick = () => {
         navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage("123")
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0, max = rawData.length; i < max; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
     }
 </script>
 </html>
