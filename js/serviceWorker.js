@@ -40,7 +40,7 @@ self.addEventListener('activate', event => { //激活状态
                     })
             );
 
-        }).then(()=>self.clients.claim())
+        }).then(() => self.clients.claim())
     )
 
 });
@@ -106,7 +106,14 @@ const handleFetchRequest = function (req) {
         return caches.match(request)  //现在缓存中比对
             .then(function (response) {
                 if (response) { //缓存里有就直接返回
-                   return response
+                    fetch(request).then(res => {
+                        if (isValidResponse(res)) {
+                            caches.open(version).then(cache => {
+                                cache.put(request, res);
+                            })
+                        }
+                    })
+                    return response
                 }
 
                 return fetch(request) //没有去请求一次缓存上
