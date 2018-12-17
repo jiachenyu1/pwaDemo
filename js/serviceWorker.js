@@ -1,15 +1,15 @@
 const offlineURL = '/offline';
 const staticFile = ["/", "/manifest.json", "/css/style.css", "/image/banner.png", "/image/logo/ic_launcher48.png", "/image/favicon.ico"].concat(offlineURL)
-const version = "v2.1";
+const version = "v2.3";
 const cache_host = [location.host, 'c.xinstatic.com'];
 
-self.addEventListener("install", function (e) {
+self.addEventListener("install", function (e) { // 安装
     console.log("install11");
-    e.waitUntil(
-        caches.open(version).then(cache => {
+    e.waitUntil(  //安装成功的回调
+        caches.open(version).then(cache => { //缓存一些默认需要缓存的
             return cache.addAll(staticFile)
         }).then(() => {
-            self.skipWaiting();
+            self.skipWaiting(); //跳过等待直接进入  active状态
         }).catch(err => {
             console.log(err)
         })
@@ -17,24 +17,22 @@ self.addEventListener("install", function (e) {
 
 })
 
-self.addEventListener('activate', event => {
+self.addEventListener('activate', event => { //激活状态
 
     console.log('service worker: activate');
 
-    // delete old caches
     event.waitUntil(
-        caches.keys().then(keylist => {
+        caches.keys().then(keylist => {  //删除掉旧的缓存
             console.log(keylist)
             return Promise.all(
                 keylist
                     .filter(key => key !== version)
                     .map(key => {
                         caches.delete(key);
-                        self.clients.matchAll()
+                        self.clients.matchAll()  //所有展示在前台的浏览器
                             .then(function (clients) {
                                 if (clients && clients.length) {
                                     clients.forEach(function (client) {
-                                        // 发送字符串'sw.update'
                                         client.postMessage('update');
                                     })
                                 }
@@ -42,32 +40,32 @@ self.addEventListener('activate', event => {
                     })
             );
 
-        }).then(() => self.clients.claim())
+        }).then(()=>self.clients.claim())
     )
 
 });
 
-self.addEventListener("message", e => {
+self.addEventListener("message", e => {  //监听页面的消息
     console.log(e);
     e.source.postMessage('send')
 })
 
-self.addEventListener("fetch", e => {
-    if(e.request.method === "POST"){
+self.addEventListener("fetch", e => { //监听fetch
+    console.log("fetch:", e)
+    if (e.request.method === "POST") {
         return;
     }
-    e.respondWith(
+    e.respondWith(  //发送请求
         handleFetchRequest(e.request)
     )
 })
-let url = "";
 
-self.addEventListener("push", e => {
+self.addEventListener("push", e => {   //监听推送
     console.log(JSON.parse(e.data.text()));
     const res = JSON.parse(e.data.text());
     url = res.url;
     e.waitUntil(
-        self.registration.showNotification(res.title, {
+        self.registration.showNotification(res.title, { //展示推送
             body: res.msg,
             url: res.url,
             icon: res.icon,
@@ -76,16 +74,14 @@ self.addEventListener("push", e => {
     )
 })
 
-self.addEventListener("notificationclick", e => {
+self.addEventListener("notificationclick", e => {  //控制推送点击
     console.log(e)
     e.notification.close();
     e.waitUntil(
         clients.matchAll({
             type: "window"
         }).then(function () {
-            if (clients.openWindow) {
-                return clients.openWindow(e.notification.data);
-            }
+            return clients.openWindow(e.notification.data);
         })
     )
 })
@@ -105,40 +101,21 @@ const isValidResponse = function (response) {
 };
 
 const handleFetchRequest = function (req) {
-    if (isNeedCache(req.url)) {
-        const request = isCORSRequest(req.url, location.host) ? new Request(req.url, {mode: 'cors'}) : req;
-        return caches.match(request)
+    if (isNeedCache(req.url)) { //判断是否需要缓存
+        const request = isCORSRequest(req.url, location.host) ? new Request(req.url, {mode: 'cors'}) : req; //判断是否需要跨域
+        return caches.match(request)  //现在缓存中比对
             .then(function (response) {
-                // Cache hit - return response directly
-                if (response) {
-                    // Update Cache for next time enter
-                    fetch(request)
-                        .then(function (response) {
-
-                            // Check a valid response
-                            if (isValidResponse(response)) {
-                                caches
-                                    .open(version)
-                                    .then(function (cache) {
-                                        cache.put(request, response);
-                                    });
-                            } else {
-                                console.log('Update cache ' + request.url + ' fail: ' + response.message);
-                            }
-                        })
-                        .catch(function (err) {
-                            console.log('Update cache ' + request.url + ' fail: ' + err.message);
-                            return caches.match(offlineURL);
-                        });
-                    // return response;
+                if (response) { //缓存里有就直接返回
+                   return response
                 }
 
-                // Return fetch response
-                return fetch(request)
+                return fetch(request) //没有去请求一次缓存上
                     .then(function (response) {
-                        // Check if we received an unvalid response
-                        if (!isValidResponse(response)) {
-                            return response;
+                        console.log(2)
+                        if (!isValidResponse(response)) {  //请求失败的返回另一个页面
+                            return caches.open(version).then(cache => {
+                                return cache.match(offlineURL)
+                            })
                         }
                         const clonedResponse = response.clone();
 
@@ -156,7 +133,7 @@ const handleFetchRequest = function (req) {
                     });
             });
     } else {
-        return fetch(req);
+        return fetch(req); //不需要缓存直接返回
     }
 };
 

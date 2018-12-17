@@ -19,7 +19,7 @@
 </head>
 <body>
 <header>
-    <h1>这是首页6</h1>
+    <h1>这是首页30</h1>
 </header>
 <nav>
     <ul>
@@ -38,12 +38,12 @@
 <script>
     const publicKey = "BEMfDUy0BLKiUyXB4ivlNb5pkkAcVejNq8DsrQXBTlAOKgVGEsZj-ZUNLZHmXvwnLyiyEBnSFcwz-lAq8sP6mC0";
     // const privateKey = "QsPaF7BsLSyBA8Ap4OM66FxEiXVL9Lf-7coQZKBv5Oc";
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/serviceWorker.js')
+    if ('serviceWorker' in navigator) { //浏览器兼容性
+        navigator.serviceWorker.register('/serviceWorker.js', {scope: "/"}) //默认控制当前serviceWorker所在路径下，scope可以向更小的范围修改
             .then(function (registration) {
                 // 注册成功
                 console.log('ServiceWorker注册成功，作用域: ' + registration.scope);
-                return registration.pushManager.getSubscription().then(res => {
+                return registration.pushManager.getSubscription().then(res => { //注册推送
                     console.log(res)
                     if (!res) {
                          subscribe(registration);
@@ -53,9 +53,9 @@
                 })
 
                 function subscribe(reg) {
-                    console.log(reg)
-                     reg.pushManager.subscribe({
-                        userVisibleOnly: true,
+                    console.log(reg);
+                     reg.pushManager.subscribe({ //设置推送的加密
+                        userVisibleOnly: true, //控制推送的显示
                         applicationServerKey: urlBase64ToUint8Array(publicKey)
                     }).then(function (pushSubscription) {
                         console.log(pushSubscription)
@@ -67,7 +67,7 @@
                             body: JSON.stringify(pushSubscription)
                         })
                     }).catch((err)=>{
-                        console.log(err)
+                        console.log(err);
                         if(Notification.permission === "denied"){
                             console.log("refuse")
                         }
@@ -79,7 +79,7 @@
                 // 注册失败:(
                 console.log('ServiceWorker注册失败: ' + err);
             });
-        navigator.serviceWorker.addEventListener("message", data => {
+        navigator.serviceWorker.addEventListener("message", data => { //serviceworker与页面的交互
             if (data.data === "update") {
                 alert("update")
             }

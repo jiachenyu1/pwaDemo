@@ -50,6 +50,7 @@
 
     navigator.serviceWorker.ready.then(req => {
         req.pushManager.getSubscription().then(sub => {
+            alert(JSON.stringify(sub))
             if(sub){
                 data.sub = sub;
             }
