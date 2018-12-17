@@ -1,7 +1,7 @@
 {
   "name": "pwdDemo",
   "short_name": "demo",
-  "description": "An example website implementing Progressive Web App technology.",
+  "description": "demo",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
