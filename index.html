@@ -19,7 +19,7 @@
 </head>
 <body>
 <header>
-    <h1>这是首页</h1>
+    <h1>这是首页2</h1>
 </header>
 <nav>
     <ul>
@@ -35,6 +35,7 @@
     <img src="//c1.xinstatic.com/c/20181108/0848/5be387e75239e604853_18.jpg" alt="">
 </main>
 </body>
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
 <script>
     const publicKey = "BEMfDUy0BLKiUyXB4ivlNb5pkkAcVejNq8DsrQXBTlAOKgVGEsZj-ZUNLZHmXvwnLyiyEBnSFcwz-lAq8sP6mC0";
     // const privateKey = "QsPaF7BsLSyBA8Ap4OM66FxEiXVL9Lf-7coQZKBv5Oc";
@@ -107,5 +108,22 @@
         }
         return outputArray;
     }
+
+    $(document).ready(function(){
+        $.ajax({
+            type: "post",
+            url: 'http://invoice2-dev.wanda.cn/vatapp/scm/baiwangcloudApp/collectinfo.do?query',
+            data: {
+                uid: 'v_wangjingtao',
+                relatedStatus: 0,
+                page: 1,
+                rows: 10
+            },
+            async:false,
+            success:function(data){
+                console.log(data)
+            }
+        })
+    })
 </script>
 </html>

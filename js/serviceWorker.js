@@ -1,10 +1,10 @@
 const offlineURL = '/offline';
 const staticFile = ["/", "/manifest.json", "/css/style.css", "/image/banner.png", "/image/logo/ic_launcher48.png", "/image/favicon.ico"].concat(offlineURL)
-const version = "v2.3";
+const version = "v2.5";
 const cache_host = [location.host, 'c.xinstatic.com'];
 
-self.addEventListener("install", function (e) { // 安装
-    console.log("install11");
+this.addEventListener("install", function (e) { // 安装
+    console.log("install13");
     e.waitUntil(  //安装成功的回调
         caches.open(version).then(cache => { //缓存一些默认需要缓存的
             return cache.addAll(staticFile)
